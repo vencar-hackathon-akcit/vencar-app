@@ -16,7 +16,9 @@ export function AppShell({children, hideNewAction = false}: {children: ReactNode
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-electric-cyan focus:px-4 focus:py-2 focus:text-asphalt-black">Pular para o conteúdo</a>
       <header className="sticky top-0 z-50 border-b border-steel/40 bg-graphite/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-3 px-4 lg:px-6">
-          <Link href={paths.home} className="flex min-h-11 items-center text-headline-sm font-bold tracking-tight text-ice-white">Ven<span className="text-electric-cyan">car</span></Link>
+          <Link href={paths.home} className="flex min-h-11 items-center" aria-label="Vencar Pricing Agent">
+            <img src={isLight ? '/assets/brand/logo-dark.png' : '/assets/brand/logo-white.png'} alt="Vencar Pricing Agent" className="h-10 w-auto object-contain" />
+          </Link>
           <div className="flex items-center gap-2">
             {!hideNewAction && <Link href={paths.newAssessment} className={buttonPrimary}><Plus aria-hidden="true" className="size-4" />Nova avaliação</Link>}
             <button type="button" onClick={toggleTheme} aria-label={isLight ? 'Usar tema escuro' : 'Usar tema claro'} className="t-press flex size-11 cursor-pointer items-center justify-center rounded-lg text-cool-gray hover:bg-surface-container-high hover:text-ice-white">
