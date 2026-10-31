@@ -240,7 +240,7 @@ export function LandingPage() {
                       <div className="relative z-10 w-full h-full flex items-center justify-center -translate-y-8 sm:translate-y-0">
                         <video
                           aria-hidden="true"
-                          src="/assets/Jeep_Renegade_Scan_v4_fluid_mapping_665fd4b5.mp4"
+                          src="/assets/Jeep_Renegade_Scan_v5_textured.mp4"
                           autoPlay={!reducedMotion}
                           loop={!reducedMotion}
                           muted
