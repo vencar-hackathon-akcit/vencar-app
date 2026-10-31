@@ -1,0 +1,6 @@
+{
+  "name": "Autonomous Valuation Engine",
+  "description": "Quantitative fintech precision and automotive enterprise infrastructure for algorithmic vehicle valuation, liquidity telemetry, and fair market pricing distribution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
