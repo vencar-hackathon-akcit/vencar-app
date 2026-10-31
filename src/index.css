@@ -86,10 +86,6 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-::-webkit-scrollbar {
-  display: none;
-}
-
 video {
   pointer-events: none;
 }
@@ -406,7 +402,7 @@ video::-webkit-media-controls-fullscreen-button {
 }
 
 .light .text-cool-gray {
-  color: #64748B !important;
+  color: #566579 !important;
 }
 
 .light .text-on-surface {
@@ -447,6 +443,28 @@ video::-webkit-media-controls-fullscreen-button {
   border-top: 1px solid #E2E8F0 !important;
 }
 
+.light textarea {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+.light .text-electric-cyan {
+  color: #006970 !important;
+}
+
+.light .text-signal-lime {
+  color: #3F6212 !important;
+}
+
+.light .text-warm-amber {
+  color: #92400E !important;
+}
+
+.light .text-coral-red {
+  color: #B91C1C !important;
+}
+
 .light .custom-range-slider::-webkit-slider-runnable-track {
   background: #E2E8F0 !important;
   border-color: #CBD5E1 !important;
@@ -470,4 +488,167 @@ video::-webkit-media-controls-fullscreen-button {
 }
 .light #terminal-3d .bg-deep-petrol {
   background-color: #17242A !important;
+}
+
+:root {
+  --shimmer-dur: 2000ms;
+  --shimmer-base: #91A2A6;
+  --shimmer-highlight: #F2F6F5;
+  --shimmer-band: 400%;
+  --shimmer-ease: linear;
+  --acc-expand: 250ms;
+  --acc-collapse: 250ms;
+  --acc-chevron: 250ms;
+  --acc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pulse-dur: 1000ms;
+  --pulse-count: infinite;
+  --pulse-min: 0.5;
+  --shake-distance: 6px;
+  --shake-overshoot: 4px;
+  --shake-dur-a: 80ms;
+  --shake-dur-b: 60ms;
+  --shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --scale-large: 0.96;
+}
+
+.light {
+  --shimmer-base: #475569;
+  --shimmer-highlight: #0F172A;
+}
+
+:focus-visible {
+  outline: 2px solid #00C7D4;
+  outline-offset: 2px;
+}
+
+.light :focus-visible {
+  outline-color: #006970;
+}
+
+main:focus {
+  outline: none;
+}
+
+.t-shimmer {
+  position: relative;
+  display: inline-block;
+  color: var(--shimmer-base);
+}
+.t-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent          0%,
+    transparent         40%,
+    var(--shimmer-highlight) 50%,
+    transparent         60%,
+    transparent        100%
+  );
+  background-size: var(--shimmer-band) 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-shimmer var(--shimmer-dur) var(--shimmer-ease) infinite;
+}
+@keyframes t-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+.t-acc-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--acc-collapse) var(--acc-ease);
+}
+.t-acc[data-open="true"] .t-acc-panel {
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--acc-expand) var(--acc-ease);
+}
+.t-acc-panel-inner {
+  overflow: hidden;
+  opacity: 0;
+  filter: blur(2px);
+  visibility: hidden;
+  transition:
+    opacity var(--acc-collapse) var(--acc-ease),
+    filter var(--acc-collapse) var(--acc-ease),
+    visibility 0s linear var(--acc-collapse);
+}
+.t-acc[data-open="true"] .t-acc-panel-inner {
+  opacity: 1;
+  filter: blur(0);
+  visibility: visible;
+  transition:
+    opacity var(--acc-expand) var(--acc-ease),
+    filter var(--acc-expand) var(--acc-ease),
+    visibility 0s linear 0s;
+}
+.t-acc-chevron {
+  display: inline-flex;
+  transform: scaleY(1);
+  transform-origin: center;
+  transition: transform var(--acc-chevron) var(--acc-ease);
+}
+.t-acc[data-open="true"] .t-acc-chevron {
+  transform: scaleY(-1);
+}
+
+.t-skel-skeleton.is-pulsing > * {
+  animation: t-skel-pulse var(--pulse-dur) ease-in-out var(--pulse-count);
+}
+@keyframes t-skel-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: var(--pulse-min); }
+}
+
+.t-input.is-shaking {
+  animation: t-input-shake calc(
+      var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2
+    ) linear;
+}
+@keyframes t-input-shake {
+  0%      { transform: translateX(0);                                 animation-timing-function: var(--shake-ease); }
+  28.57%  { transform: translateX(var(--shake-distance));             animation-timing-function: var(--shake-ease); }
+  57.14%  { transform: translateX(calc(var(--shake-distance) * -1)); animation-timing-function: var(--shake-ease); }
+  78.57%  { transform: translateX(var(--shake-overshoot));            animation-timing-function: var(--shake-ease); }
+  100%    { transform: translateX(0); }
+}
+
+.t-modal {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity var(--duration-fast) var(--ease-smooth-out),
+    transform var(--duration-fast) var(--ease-smooth-out);
+}
+@starting-style {
+  .t-modal[open] {
+    opacity: 0;
+    transform: scale(var(--scale-large));
+  }
+}
+
+.t-press {
+  transition:
+    background-color var(--duration-quick) ease-out,
+    border-color var(--duration-quick) ease-out,
+    color var(--duration-quick) ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .t-shimmer::before { animation: none !important; }
+  .t-acc-panel, .t-acc-panel-inner, .t-acc-chevron, .t-modal, .t-press {
+    transition: none !important;
+  }
+  .t-skel-skeleton.is-pulsing > * { animation: none !important; }
+  .t-input { animation: none !important; transform: none !important; }
 }
