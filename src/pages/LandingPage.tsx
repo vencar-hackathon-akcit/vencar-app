@@ -55,11 +55,15 @@ export function LandingPage() {
           <div className="flex items-center gap-space-lg">
             <a
               href="#hero"
-             
+              aria-label="Vencar Pricing Agent"
               className="flex items-center gap-space-sm cursor-pointer"
               onClick={() => scrollToSection('hero', 'visao-geral')}
             >
-              <span className="text-headline-sm font-bold tracking-tight text-ice-white">Ven<span className="text-electric-cyan">car</span></span>
+              <img
+                src={theme === 'light' ? '/assets/brand/logo-dark.png' : '/assets/brand/logo-white.png'}
+                alt="Vencar Pricing Agent"
+                className="h-10 w-auto object-contain"
+              />
             </a>
             <nav className="hidden lg:flex items-center gap-space-xs">
               <button
@@ -544,7 +548,11 @@ export function LandingPage() {
                   <div>
                     <div className="flex items-center justify-between pb-space-sm mb-space-md">
                       <div className="flex items-center gap-2">
-                        <span className="text-title-md font-bold tracking-tight text-ice-white">Ven<span className="text-electric-cyan">car</span></span>
+                        <img
+                          src={theme === 'light' ? '/assets/brand/logo-dark.png' : '/assets/brand/logo-white.png'}
+                          alt="Vencar Pricing Agent"
+                          className="h-8 w-auto object-contain"
+                        />
                       </div>
                       <span className={`px-2.5 py-1 rounded font-label-sm text-label-sm font-bold ${
                         theme === 'light'
@@ -963,7 +971,11 @@ export function LandingPage() {
       <footer className="w-full bg-surface-container-lowest mt-space-xl py-space-xl border-t border-steel/30">
         <div className="max-w-[1240px] mx-auto px-space-md lg:px-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md">
           <div className="flex items-center gap-space-md">
-            <span className="text-title-md font-bold tracking-tight text-ice-white">Ven<span className="text-electric-cyan">car</span></span>
+            <img
+              src={theme === 'light' ? '/assets/brand/logo-dark.png' : '/assets/brand/logo-white.png'}
+              alt="Vencar Pricing Agent"
+              className="h-9 w-auto object-contain"
+            />
             <span className="font-body-sm text-body-sm text-cool-gray">
               Vencar, projeto do AKCIT CAMP. Relatórios gerados com apoio de IA precisam de validação humana.
             </span>
