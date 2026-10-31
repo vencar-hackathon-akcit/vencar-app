@@ -6,21 +6,9 @@ import {saveAssessmentDraft} from '../lib/assessmentDraft';
 import {navigate, paths} from '../lib/router';
 import {useTheme} from '../lib/theme';
 
-/** Tell whether the visitor asked for less motion. */
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReduced(query.matches);
-    query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
-  }, []);
-  return reduced;
-}
 /** Present the product with the original sections and lead to a new assessment. */
 export function LandingPage() {
   const {theme, toggleTheme} = useTheme();
-  const reducedMotion = usePrefersReducedMotion();
   const [activeNav, setActiveNav] = useState<string>('visao-geral');
   const [plate, setPlate] = useState<string>('');
   const [km, setKm] = useState<string>('');
@@ -241,10 +229,11 @@ export function LandingPage() {
                         <video
                           aria-hidden="true"
                           src="/assets/Jeep_Renegade_Scan_v5_textured.mp4"
-                          autoPlay={!reducedMotion}
-                          loop={!reducedMotion}
+                          autoPlay
+                          loop
                           muted
                           playsInline
+                          preload="auto"
                           controls={false}
                           disablePictureInPicture
                           disableRemotePlayback
