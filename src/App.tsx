@@ -183,7 +183,7 @@ export default function App() {
                 <img
                   alt="Vencar Icon"
                   className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida/AEtjO1UA8DcS0WOn3oWeE9KV1OpHPwClDtHLH3p4QImr_DEvCCufcW_27tSSAFo99TA9wf8wvVhI5ZIfXI0xb9UE2pNC_TkiA0q9O7qNHuQiy0sPZ_Gkrnd8PJ_NTGhC67_krn0B9u0qS2KLXK4t7WXnEL2a2AMpRoLKRyHiiQlHIjpCI6WaLfe6GUbzr2MFHYH5q7htVREtYtx6PJMgoSGbglubNn2lZeg5hjsWgrqkhnKXczsbjpkLzTuW5f8b"
+                  src="/apple-touch-icon.png"
                 />
               </div>
             </div>
@@ -318,7 +318,7 @@ export default function App() {
                       {/* Jeep Renegade 3D Scan Video - perfectly framed on mobile and desktop */}
                       <div className="relative z-10 w-full h-full flex items-center justify-center -translate-y-8 sm:translate-y-0">
                         <video
-                          src="/assets/Jeep_Renegade_Scan_v4_fluid_mapping_665fd4b5.mp4"
+                          src="/assets/Jeep_Renegade_Scan_v5_textured_81c4e3b6.mp4"
                           autoPlay
                           loop
                           muted
