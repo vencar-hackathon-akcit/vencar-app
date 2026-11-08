@@ -12,7 +12,7 @@ import type {PhotoAssessment, PhotoSummary} from '../../lib/assessmentTypes';
 import {getPhotoBlob} from '../../lib/api';
 
 /** Fetch a protected photo as a blob and keep its temporary URL. */
-function usePhotoUrl(assessmentId: string, photoId: string): {url: string | null; failed: boolean} {
+export function usePhotoUrl(assessmentId: string, photoId: string): {url: string | null; failed: boolean} {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {

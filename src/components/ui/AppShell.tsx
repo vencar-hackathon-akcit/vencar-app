@@ -20,7 +20,7 @@ export function AppShell({children, hideNewAction = false}: {children: ReactNode
             <img src={isLight ? '/assets/brand/logo-dark.png' : '/assets/brand/logo-white.png'} alt="Vencar Pricing Agent" className="h-10 w-auto object-contain" />
           </Link>
           <div className="flex items-center gap-2">
-            {!hideNewAction && <Link href={paths.newAssessment} className={buttonPrimary}><Plus aria-hidden="true" className="size-4" />Nova avaliação</Link>}
+            {!hideNewAction && <Link href={paths.newAssessment} className={`${buttonPrimary} max-sm:px-3`}><Plus aria-hidden="true" className="size-4" /><span className="max-sm:sr-only">Nova avaliação</span></Link>}
             <button type="button" onClick={toggleTheme} aria-label={isLight ? 'Usar tema escuro' : 'Usar tema claro'} className="t-press flex size-11 cursor-pointer items-center justify-center rounded-lg text-cool-gray hover:bg-surface-container-high hover:text-ice-white">
               {isLight ? <Moon aria-hidden="true" className="size-5" /> : <Sun aria-hidden="true" className="size-5" />}
             </button>

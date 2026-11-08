@@ -1,6 +1,7 @@
 // Dependencies
-import {Lightbulb, UserCheck} from 'lucide-react';
+import {AlertTriangle, Camera, Link2, Lightbulb, MessageCircleQuestion, Printer, UserCheck} from 'lucide-react';
 import {useEffect, useState} from 'react';
+import type {CSSProperties, ReactNode} from 'react';
 
 // Shared
 import {AnswerForm} from '../components/assessment/AnswerForm';
@@ -9,6 +10,7 @@ import {EvidenceGallery} from '../components/assessment/EvidenceGallery';
 import {ScoreCard} from '../components/assessment/ScoreCard';
 import {AppShell} from '../components/ui/AppShell';
 import {BackLink, Badge, buttonPrimary, buttonSecondary, Notice, Section, Skeleton} from '../components/ui';
+import {MorphText, useShown} from '../components/ui/motion';
 
 // Types
 import type {AssessmentDetail, AssessmentStatus, Confidence, Damage, Dossier, Severity} from '../lib/assessmentTypes';
@@ -22,6 +24,108 @@ const STATUS_TONES: Record<AssessmentStatus, 'info' | 'success' | 'warning' | 'd
 const SEVERITY_TONES: Record<Severity, 'warning' | 'danger' | 'neutral'> = {minor: 'neutral', moderate: 'warning', severe: 'danger'};
 const CONFIDENCE_ORDER: Confidence[] = ['high', 'medium', 'low'];
 const DEFAULT_HUMAN_REASON = 'Este relatório foi gerado com apoio de IA e não substitui a vistoria de um profissional.';
+const COPY_RESET_MS = 2000;
+const SETTLE_MS = 900;
+
+/** Rise a block into place with the others, then drop the effects that would trap fixed children. */
+function Reveal({index, children}: {index: number; children: ReactNode}) {
+  const shown = useShown();
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    if (!shown) return;
+    const timer = window.setTimeout(() => setSettled(true), SETTLE_MS + index * 40);
+    return () => window.clearTimeout(timer);
+  }, [shown, index]);
+  return <div className={`t-stagger ${shown ? 'is-shown' : ''} ${settled ? 'is-settled' : ''}`}><div className="t-stagger-line" style={{'--stagger-index': index} as CSSProperties}>{children}</div></div>;
+}
+
+/** Show one key number of the report. */
+function Stat({icon: Icon, label, value, tone = 'text-ice-white'}: {icon: typeof Camera; label: string; value: string; tone?: string}) {
+  return (
+    <div className="rounded-lg border border-steel bg-deep-petrol p-3">
+      <p className="flex items-center gap-1.5 text-body-sm text-cool-gray"><Icon aria-hidden="true" className="size-4" />{label}</p>
+      <p className={`mt-1 font-geist-mono text-headline-sm font-semibold ${tone}`}>{value}</p>
+    </div>
+  );
+}
+
+/** Copy the report address and confirm it in place. */
+function CopyLinkButton() {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timer = window.setTimeout(() => setCopied(false), COPY_RESET_MS);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
+  /** Write the current address to the clipboard, falling back to a hidden field when the API is blocked. */
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+    } catch {
+      const field = document.createElement('textarea');
+      field.value = window.location.href;
+      field.setAttribute('readonly', '');
+      field.className = 'fixed -left-[9999px]';
+      document.body.append(field);
+      field.select();
+      setCopied(document.execCommand('copy'));
+      field.remove();
+    }
+  };
+  return (
+    <button type="button" onClick={copy} className={buttonSecondary}>
+      <Link2 aria-hidden="true" className="size-4" />
+      <MorphText text={copied ? 'Link copiado' : 'Copiar link'} />
+      <span role="status" className="sr-only">{copied ? 'Link copiado' : ''}</span>
+    </button>
+  );
+}
+
+/** Open the report with its identity, state, key numbers and actions. */
+function ReportHero({detail, vehicleName}: {detail: AssessmentDetail; vehicleName: string}) {
+  const dossier = detail.dossier;
+  const damages = dossier?.damages ?? [];
+  const severe = damages.filter((damage) => damage.severity === 'severe').length;
+  const usable = (dossier?.photoAssessments ?? []).filter((item) => item.usable).length;
+  return (
+    <div className="rounded-xl border border-steel bg-graphite p-4 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-label-md font-medium text-electric-cyan">Dossiê técnico{detail.vehicle.plate ? ` · ${detail.vehicle.plate}` : ''}</p>
+          <h1 className="mt-1 text-headline-lg-mobile font-bold text-ice-white sm:text-headline-md">{vehicleName || 'Veículo sem identificação'}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Badge tone={STATUS_TONES[detail.status]}>{STATUS_LABELS[detail.status]}</Badge>
+            <span className="text-body-sm text-cool-gray">Atualizado em {formatDateTime(detail.updatedAt)}</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 print:hidden">
+          <CopyLinkButton />
+          <button type="button" onClick={() => window.print()} className={buttonSecondary}><Printer aria-hidden="true" className="size-4" />Imprimir</button>
+        </div>
+      </div>
+      {dossier && (
+        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat icon={AlertTriangle} label="Avarias observadas" value={String(damages.length)} tone={severe ? 'text-coral-red' : 'text-ice-white'} />
+          <Stat icon={Lightbulb} label="Hipóteses da IA" value={String(dossier.hypotheses?.length ?? 0)} />
+          <Stat icon={Camera} label="Fotos utilizáveis" value={`${usable}/${detail.photos.length}`} />
+          <Stat icon={MessageCircleQuestion} label="Perguntas abertas" value={String(dossier.questions?.length ?? 0)} tone={dossier.questions?.length ? 'text-warm-amber' : 'text-ice-white'} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Link to each part of a long report. */
+function PageNav({items}: {items: {id: string; label: string}[]}) {
+  return (
+    <nav aria-label="Nesta página" className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] print:hidden">
+      <ul className="flex gap-2">
+        {items.map((item) => <li key={item.id}><a href={`#${item.id}`} className="t-press inline-flex min-h-9 items-center whitespace-nowrap rounded-full border border-steel bg-deep-petrol px-3 text-body-sm text-on-surface-variant hover:border-electric-cyan hover:text-ice-white">{item.label}</a></li>)}
+      </ul>
+    </nav>
+  );
+}
 
 /** Link an evidence id to its photo when there is one. */
 function EvidenceChip({id, photoIds}: {id: string; photoIds: Set<string>}) {
@@ -84,10 +188,10 @@ function DossierSections({detail, dossier}: {detail: AssessmentDetail; dossier: 
   ].filter((note) => note.items.length);
   return (
     <>
-      {analyzed && <><Section title="Avarias observadas" description="O que as evidências mostram.">
+      {analyzed && <><Section id="avarias" title="Avarias observadas" description="O que as evidências mostram.">
         {damages.length ? <ul className="grid gap-3 md:grid-cols-2">{damages.map((damage, index) => <DamageItem key={`${damage.evidenceId}-${index}`} damage={damage} photoIds={photoIds} />)}</ul> : <p className="text-body-md text-cool-gray">Nenhuma avaria foi observada nas evidências enviadas. Isso não garante que o carro não tenha avarias.</p>}
       </Section>
-      <section aria-labelledby="hipoteses" className="rounded-xl border-2 border-dashed border-warm-amber/50 bg-graphite p-4 sm:p-5">
+      <section id="secao-hipoteses" aria-labelledby="hipoteses" className="scroll-mt-20 rounded-xl border-2 border-dashed border-warm-amber/50 bg-graphite p-4 sm:p-5">
         <h2 id="hipoteses" className="flex items-center gap-2 text-headline-sm font-semibold text-ice-white"><Lightbulb aria-hidden="true" className="size-5 text-warm-amber" />Hipóteses da IA</h2>
         <p className="mt-1 text-body-md text-on-surface-variant">Possibilidades levantadas pela IA. Não são diagnóstico nem fato observado, e precisam ser confirmadas por um profissional.</p>
         {hypotheses.length ? (
@@ -107,7 +211,7 @@ function DossierSections({detail, dossier}: {detail: AssessmentDetail; dossier: 
         ) : <p className="mt-4 text-body-md text-cool-gray">A IA não levantou hipóteses nesta avaliação.</p>}
       </section></>}
       {!!dossier.conflicts?.length && (
-        <Section title="Conflitos entre evidências" description="Pontos em que as informações não batem. Vale conferir pessoalmente.">
+        <Section id="conflitos" title="Conflitos entre evidências" description="Pontos em que as informações não batem. Vale conferir pessoalmente.">
           <ul className="grid gap-3 md:grid-cols-2">
             {dossier.conflicts.map((conflict) => (
               <li key={conflict.description} className="rounded-lg border border-steel bg-deep-petrol p-4">
@@ -177,10 +281,21 @@ export function ReportPage({id}: {id: string}) {
   }, [id, attempt]);
   const dossier = detail?.dossier;
   const vehicleName = detail ? [detail.vehicle.make, detail.vehicle.model, detail.vehicle.year].filter(Boolean).join(' ') : '';
+  const analyzed = detail?.status === 'completed' || !!dossier?.damages?.length || !!dossier?.hypotheses?.length;
+  const navItems = [
+    {id: 'score', label: 'Score', show: true},
+    {id: 'responder', label: 'Responder', show: detail?.status === 'needs_input'},
+    {id: 'resumo', label: 'Resumo', show: !!(dossier?.summary || dossier?.recommendation)},
+    {id: 'fotos', label: 'Fotos', show: true},
+    {id: 'avarias', label: 'Avarias', show: !!dossier && analyzed},
+    {id: 'secao-hipoteses', label: 'Hipóteses', show: !!dossier && analyzed},
+    {id: 'conflitos', label: 'Conflitos', show: !!dossier?.conflicts?.length},
+    {id: 'rastro', label: 'Rastro da análise', show: true},
+  ].filter((item) => item.show);
   return (
     <AppShell>
       <div className="mx-auto max-w-[1240px] space-y-6 px-4 py-6 lg:px-6 lg:py-8">
-        <BackLink href={paths.newAssessment} label="Voltar para nova avaliação" />
+        <div className="print:hidden"><BackLink href={paths.newAssessment} label="Voltar para nova avaliação" /></div>
         {error && (
           <>
             <h1 className="text-headline-lg-mobile font-bold text-ice-white sm:text-headline-md">Relatório indisponível</h1>
@@ -201,49 +316,71 @@ export function ReportPage({id}: {id: string}) {
         )}
         {detail && (
           <>
-            <div>
-              <p className="text-label-md font-medium text-electric-cyan">Dossiê técnico</p>
-              <h1 className="mt-1 text-headline-lg-mobile font-bold text-ice-white sm:text-headline-md">{vehicleName || 'Veículo sem identificação'}</h1>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge tone={STATUS_TONES[detail.status]}>{STATUS_LABELS[detail.status]}</Badge>
-                <span className="text-body-sm text-cool-gray">Atualizado em {formatDateTime(detail.updatedAt)}</span>
-              </div>
-            </div>
-            <StatusNotice detail={detail} dossier={dossier} />
-            {dossier && (
-            <div className="flex gap-3 rounded-xl border border-electric-cyan/40 bg-electric-cyan/10 p-4">
-              <UserCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-electric-cyan" />
-              <div>
-                <p className="text-body-md font-semibold text-ice-white">Precisa de validação humana</p>
-                <p className="text-body-md text-on-surface-variant">{dossier?.humanValidationReason || DEFAULT_HUMAN_REASON}</p>
-              </div>
-            </div>
+            <Reveal index={0}><ReportHero detail={detail} vehicleName={vehicleName} /></Reveal>
+            <Reveal index={1}><PageNav items={navItems} /></Reveal>
+            {detail.status === 'needs_input' && (
+              <Reveal index={2}>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warm-amber/50 bg-warm-amber/10 p-4">
+                  <div className="flex min-w-0 gap-3">
+                    <MessageCircleQuestion aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-warm-amber" />
+                    <div>
+                      <p className="text-body-md font-semibold text-ice-white">A IA precisa da sua ajuda para concluir</p>
+                      <p className="text-body-md text-on-surface-variant">{dossier?.statusReason || 'Responda às perguntas para continuar a análise.'}</p>
+                    </div>
+                  </div>
+                  <a href="#responder" className={`${buttonPrimary} print:hidden`}>Responder agora</a>
+                </div>
+              </Reveal>
             )}
+            {detail.status !== 'needs_input' && <Reveal index={2}><StatusNotice detail={detail} dossier={dossier} /></Reveal>}
             <div className="grid items-start gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
-              <aside className="space-y-6 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
-                <Section title="Score Vencar">
-                  {dossier?.score ? <ScoreCard score={dossier.score} /> : <p className="text-body-md text-cool-gray">Sem score nesta avaliação. O Score Vencar só aparece quando a análise é concluída.</p>}
-                </Section>
-                <Section title="Veículo"><VehicleFacts detail={detail} /></Section>
+              <aside className="space-y-6 [scrollbar-color:var(--color-steel)_transparent] [scrollbar-width:thin] lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+                <Reveal index={3}>
+                  <Section id="score" title="Score Vencar">
+                    {dossier?.score ? <ScoreCard score={dossier.score} /> : <p className="text-body-md text-cool-gray">Sem score nesta avaliação. O Score Vencar só aparece quando a análise é concluída.</p>}
+                  </Section>
+                </Reveal>
+                <Reveal index={4}><Section title="Veículo"><VehicleFacts detail={detail} /></Section></Reveal>
               </aside>
               <div className="min-w-0 space-y-6">
                 {detail.status === 'needs_input' && (
-                  <Section title="O que precisamos saber" id="responder">
-                    {!!dossier?.questions?.length && <div className="mb-5"><PlainList items={dossier.questions} /></div>}
-                    <AnswerForm assessmentId={id} vehicle={detail.vehicle} photoCount={detail.photos.length} />
-                  </Section>
+                  <Reveal index={3}>
+                    <Section title="O que precisamos saber" id="responder">
+                      {!!dossier?.questions?.length && <div className="mb-5"><PlainList items={dossier.questions} /></div>}
+                      <AnswerForm assessmentId={id} vehicle={detail.vehicle} photoCount={detail.photos.length} />
+                    </Section>
+                  </Reveal>
                 )}
                 {(dossier?.summary || dossier?.recommendation) && (
-                  <Section title="Resumo da IA">
-                    {dossier.summary && <p className="text-body-md text-on-surface-variant">{dossier.summary}</p>}
-                    {dossier.recommendation && <p className="mt-3 text-body-md text-on-surface-variant"><span className="font-semibold text-ice-white">Recomendação:</span> {dossier.recommendation}</p>}
-                  </Section>
+                  <Reveal index={4}>
+                    <Section id="resumo" title="Resumo da IA">
+                      {dossier.summary && <p className="text-body-md text-on-surface-variant">{dossier.summary}</p>}
+                      {dossier.recommendation && <p className="mt-3 text-body-md text-on-surface-variant"><span className="font-semibold text-ice-white">Recomendação:</span> {dossier.recommendation}</p>}
+                    </Section>
+                  </Reveal>
                 )}
-                <Section title="Fotos e evidências" description={detail.photos.length ? 'Toque em uma foto para ampliar.' : undefined}>
-                  <EvidenceGallery assessmentId={id} photos={detail.photos} assessments={dossier?.photoAssessments ?? []} />
-                </Section>
-                {dossier ? <DossierSections detail={detail} dossier={dossier} /> : <Section title="Conteúdo do relatório"><p className="text-body-md text-cool-gray">Esta avaliação não gerou conteúdo de relatório. Você pode começar uma nova com os mesmos dados.</p></Section>}
-                <EventTrace events={detail.events} historyIntact={detail.historyIntact} />
+                {dossier && (
+                  <Reveal index={5}>
+                    <div className="flex gap-3 rounded-xl border border-electric-cyan/40 bg-electric-cyan/10 p-4">
+                      <UserCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-electric-cyan" />
+                      <div>
+                        <p className="text-body-md font-semibold text-ice-white">Precisa de validação humana</p>
+                        <p className="text-body-md text-on-surface-variant">{dossier.humanValidationReason || DEFAULT_HUMAN_REASON}</p>
+                      </div>
+                    </div>
+                  </Reveal>
+                )}
+                <Reveal index={6}>
+                  <Section id="fotos" title="Fotos e evidências" description={detail.photos.length ? 'Toque em uma foto para ampliar.' : undefined}>
+                    <EvidenceGallery assessmentId={id} photos={detail.photos} assessments={dossier?.photoAssessments ?? []} />
+                  </Section>
+                </Reveal>
+                <Reveal index={7}>
+                  <div className="space-y-6">
+                    {dossier ? <DossierSections detail={detail} dossier={dossier} /> : <Section title="Conteúdo do relatório"><p className="text-body-md text-cool-gray">Esta avaliação não gerou conteúdo de relatório. Você pode começar uma nova com os mesmos dados.</p></Section>}
+                  </div>
+                </Reveal>
+                <Reveal index={8}><div id="rastro" className="scroll-mt-20"><EventTrace events={detail.events} historyIntact={detail.historyIntact} /></div></Reveal>
               </div>
             </div>
           </>
